@@ -6,7 +6,6 @@ ROWS = 4
 COLUMNS = 4
 PAGE_SIZE = ROWS * COLUMNS
 
-
 def rescale_array(arr):
     min_val = arr.min()
     max_val = arr.max()
@@ -15,8 +14,7 @@ def rescale_array(arr):
     rescaled_array = 255 * (arr - min_val) / (max_val - min_val)
     return rescaled_array.astype(np.uint8)
 
-
-def draw_page(page, h5):
+def draw_page(page, h5, slice_1, slice_2):
     i = PAGE_SIZE * (page - 1)
     for row in range(ROWS):
         columns = st.columns(COLUMNS)
@@ -27,15 +25,15 @@ def draw_page(page, h5):
                 st.write('ID: {}'.format(img_id))
                 columns_lvl2 = st.columns(2)
                 with columns_lvl2[0]:
-                    st.image(rescale_array(img_data[:, :, img_data.shape[2] // 2]))
+                    st.image(rescale_array(img_data[:, :, slice_1]))
                 with columns_lvl2[1]:
-                    st.image(rescale_array(img_data[:, img_data.shape[1] // 2, :]))
+                    st.image(rescale_array(img_data[:, slice_2, :]))
             i += 1
 
 css = """
     <style>
         .container-border, div[data-testid="column"] {
-            border: 2px solid #000; 
+            border: 2px solid #000;
             padding: 3px;
         }
         div[data-testid="column"] div[data-testid="column"] {
@@ -57,5 +55,10 @@ if filepath:
         item_count = h5["X_nii"].len()
         total_pages = (item_count // PAGE_SIZE) + 1
         page = st.number_input("Page", min_value=1, max_value=total_pages, value=1)
+        
+        slice_1 = st.number_input("Slice Index 1", min_value=0, max_value=h5['X_nii'].shape[2] - 1, value=h5['X_nii'].shape[2] // 2)
+        slice_2 = st.number_input("Slice Index 2", min_value=0, max_value=h5['X_nii'].shape[1] - 1, value=h5['X_nii'].shape[1] // 2)
+        
         st.write('Page {}/{}'.format(page, total_pages))
-        draw_page(page, h5)
+        
+        draw_page(page, h5, slice_1, slice_2)
